@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Nancy;
 using NzbDrone.Api.Episodes;
-using NzbDrone.Api.Extensions;
-using NzbDrone.Api.REST;
+using Sonarr.Http.Extensions;
 using NzbDrone.Api.Series;
 using NzbDrone.Core.Datastore;
 using NzbDrone.Core.DecisionEngine;
 using NzbDrone.Core.Download;
 using NzbDrone.Core.History;
+using Sonarr.Http;
+using Sonarr.Http.REST;
 
 namespace NzbDrone.Api.History
 {
-    public class HistoryModule : NzbDroneRestModule<HistoryResource>
+    public class HistoryModule : SonarrRestModule<HistoryResource>
     {
         private readonly IHistoryService _historyService;
         private readonly IQualityUpgradableSpecification _qualityUpgradableSpecification;
