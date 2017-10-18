@@ -35,6 +35,15 @@ namespace NzbDrone.Core.Test.Messaging.Commands
                   .Returns(_executorB.Object);
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            Subject.Handle(new ApplicationShutdownRequested());
+
+            // Give the threads a bit of time to shut down.
+            Thread.Sleep(10);
+        }
+
         private void GivenCommandQueue()
         {
             _commandQueue = new BlockingCollection<CommandModel>(new CommandQueue());
@@ -63,7 +72,7 @@ namespace NzbDrone.Core.Test.Messaging.Commands
                 Thread.Sleep(100);
             }
 
-            var t1 = 1;
+            Thread.Sleep(10);
         }
 
         [Test]
