@@ -44,8 +44,10 @@ namespace NzbDrone.Core.Test.Messaging.Commands
                   .Returns(_commandQueue.GetConsumingEnumerable);
         }
 
-        private void WaitForExecution(CommandModel commandModel)
+        private void QueueAndWaitForExecution(CommandModel commandModel)
         {
+            Thread.Sleep(10);
+
             Mocker.GetMock<IManageCommandQueue>()
                   .Setup(s => s.Complete(It.Is<CommandModel>(c => c == commandModel), It.IsAny<string>()))
                   .Callback(() => _commandExecuted = true);
@@ -53,6 +55,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
             Mocker.GetMock<IManageCommandQueue>()
                   .Setup(s => s.Fail(It.Is<CommandModel>(c => c == commandModel), It.IsAny<string>(), It.IsAny<Exception>()))
                   .Callback(() => _commandExecuted = true);
+
+            _commandQueue.Add(commandModel);
 
             while (!_commandExecuted)
             {
@@ -82,9 +86,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
                                };
 
             Subject.Handle(new ApplicationStartedEvent());
-            _commandQueue.Add(commandModel);
 
-            WaitForExecution(commandModel);
+            QueueAndWaitForExecution(commandModel);
 
             _executorA.Verify(c => c.Execute(commandA), Times.Once());
         }
@@ -100,9 +103,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
             };
 
             Subject.Handle(new ApplicationStartedEvent());
-            _commandQueue.Add(commandModel);
 
-            WaitForExecution(commandModel);
+            QueueAndWaitForExecution(commandModel);
 
             _executorA.Verify(c => c.Execute(commandA), Times.Once());
             _executorB.Verify(c => c.Execute(It.IsAny<CommandB>()), Times.Never());
@@ -122,9 +124,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
                       .Throws(new NotImplementedException());
 
             Subject.Handle(new ApplicationStartedEvent());
-            _commandQueue.Add(commandModel);
 
-            WaitForExecution(commandModel);
+            QueueAndWaitForExecution(commandModel);
 
             VerifyEventPublished<CommandExecutedEvent>();
             ExceptionVerification.ExpectedErrors(1);
@@ -141,9 +142,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
             };
 
             Subject.Handle(new ApplicationStartedEvent());
-            _commandQueue.Add(commandModel);
 
-            WaitForExecution(commandModel);
+            QueueAndWaitForExecution(commandModel);
 
             VerifyEventPublished<CommandExecutedEvent>();
         }
@@ -159,9 +159,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
             };
 
             Subject.Handle(new ApplicationStartedEvent());
-            _commandQueue.Add(commandModel);
 
-            WaitForExecution(commandModel);
+            QueueAndWaitForExecution(commandModel);
 
             Mocker.GetMock<IManageCommandQueue>()
                   .Setup(s => s.Complete(It.Is<CommandModel>(c => c == commandModel), commandA.CompletionMessage))
@@ -180,9 +179,8 @@ namespace NzbDrone.Core.Test.Messaging.Commands
             };
 
             Subject.Handle(new ApplicationStartedEvent());
-            _commandQueue.Add(commandModel);
 
-            WaitForExecution(commandModel);
+            QueueAndWaitForExecution(commandModel);
 
             Mocker.GetMock<IManageCommandQueue>()
                   .Setup(s => s.Complete(It.Is<CommandModel>(c => c == commandModel), commandModel.Message))
@@ -202,7 +200,7 @@ namespace NzbDrone.Core.Test.Messaging.Commands
 
         public CommandB()
         {
-            
+
         }
 
         public override string CompletionMessage => null;
